@@ -46,7 +46,14 @@ public class DefaultRealmManager
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ClassWorld classWorld = new ClassWorld();
+    private ThreadLocal<ClassWorld> classWorld = new ThreadLocal<ClassWorld>()
+    {
+        @Override
+        protected ClassWorld initialValue()
+        {
+            return new ClassWorld();
+        }
+    };
 
     private Map providerRealms = new HashMap();
 
@@ -59,7 +66,7 @@ public class DefaultRealmManager
 
         log.debug("Creating provider realm: {}", id);
 
-        ClassRealm realm = classWorld.newRealm(id, parent);
+        ClassRealm realm = classWorld.get().newRealm(id, parent);
         setupRealm(realm, classPath);
 
         providerRealms.put(key, realm);
@@ -100,7 +107,7 @@ public class DefaultRealmManager
 
         log.debug("Releasing component realm: {}", realm.getId());
 
-        classWorld.disposeRealm(realm.getId());
+        classWorld.get().disposeRealm(realm.getId());
     }
 
     private void setupRealm(final ClassRealm realm, final URL[] classPath) {
